@@ -8,7 +8,8 @@
 int main(int argc, char** argv) {
     if (argc != 3)
         errx(EXIT_FAILURE, "Usage:\n"
-                           "Arg 1 = Port number (e.g. 2048)");
+                           "Arg 1 = Port number (e.g. 2048)"
+                           "Arg 2 = ip address (e.g. 127.0.0.1)");
     int port = atoi(argv[1]);
     char *ip =argv[2];
 
