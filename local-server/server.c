@@ -5,6 +5,7 @@
 #include <unistd.h>
 #include <err.h>
 #include <arpa/inet.h>
+#include <signal.h>
 
 int main(int argc, char** argv)
 {

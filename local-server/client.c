@@ -27,7 +27,13 @@ int main(int argc, char** argv) {
     addr.sin_port = port;
     addr.sin_addr.s_addr = inet_addr(ip);
 
-    connect(sock, (struct sockaddr*)&addr, sizeof(addr));
+    if(connect(sock, (struct sockaddr*)&addr, sizeof(addr)) == -1){
+        perror("connect");
+        exit(EXIT_FAILURE);
+    }
     printf("Connected to the server.\n");
+    /*
+     *  send request
+     */
     return 0;
 }
