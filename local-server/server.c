@@ -15,7 +15,7 @@ int main(int argc, char** argv)
                            "Arg 2 = ip address (e.g. 127.0.0.1)");
     char* port = argv[1];
     struct addrinfo hints;
-    memset(&hints, 0, sizeof(struct addrinfo));
+    memset(&hints, 0, sizeof(hints));
     hints.ai_family = AF_INET;
     hints.ai_socktype = SOCK_STREAM;
 
