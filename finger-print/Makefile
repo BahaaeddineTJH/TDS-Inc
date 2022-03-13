@@ -8,7 +8,7 @@ all: test
 
 test : test.o finger_print.o fourrier.o
 finger_print.o : finger_print.c finger_print.h fourrier.o
-fourrier.o : fourrier.c fourrier.h
+fourrier.o : ../fourrier/fourrier.c ../fourrier/fourrier.h
 
 .PHONY: clean
 
