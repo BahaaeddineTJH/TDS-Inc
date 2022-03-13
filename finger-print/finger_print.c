@@ -9,16 +9,17 @@
 #include <complex.h>
 #include <string.h>
 
-#include "fourrier.h"
+#include "../fourrier/fourrier.h"
 
 #define FUZ_FACTOR 2
-#define SAMPLE_SIZE 44100
 
-fftw_complex* create_tab(double* song, size_t song_size)
+fftw_complex* create_tab(double* song, songinfo* s_info)
 {
     printf("beginning of create_tab\n");
+    
+    size_t song_size = s_info->size;
 
-    size_t chunk_size = SAMPLE_SIZE * 4;
+    size_t chunk_size = s_info->sample_size * s_info->nb_channels;
 
     fftw_complex* res = malloc(sizeof(fftw_complex) * song_size);
     if(res == 0)
@@ -26,9 +27,10 @@ fftw_complex* create_tab(double* song, size_t song_size)
         errx(3, "Failed to malloc res in create_tab!");
     }
 
-
+    int n = 0;
     for (size_t i = 0; i < song_size; i += chunk_size)
     {
+        ++n;
         if(i + chunk_size > song_size)
         {
             chunk_size = song_size - i;
@@ -40,12 +42,13 @@ fftw_complex* create_tab(double* song, size_t song_size)
             errx(3, "Failed to malloc cur in create_tab!");
         }
 
-        fourrier_transform(song + i, cur, chunk_size);
+        cur = fourrier_transform(song + i, chunk_size);
 
         memcpy(res + i, cur, chunk_size);
-
         free(cur);
     }
+
+    printf("%i\n",n);
 
     printf("end of create_tab\n");
     return res;    
@@ -67,12 +70,13 @@ int getIndex(int freq)
     return i;
 }
 
-long* hash_tab(fftw_complex* song_tab, size_t song_size)
+long* hash_tab(fftw_complex* song_tab, songinfo* s_info)
 {
     printf("beginning of hash_tab\n");
 
-    size_t chunk_size = SAMPLE_SIZE * 4;
-    size_t song_time = song_size / (chunk_size);
+    size_t song_size = s_info->size;
+    size_t chunk_size = s_info->sample_size * s_info->nb_channels;
+    size_t song_time = s_info->duration;
 
     double* points = calloc(song_size, sizeof(double));
     if(points == 0)
@@ -80,7 +84,7 @@ long* hash_tab(fftw_complex* song_tab, size_t song_size)
         errx(3, "Failed to calloc hash_ta in hash_tab!");
     }
 
-    long* hash_tab = malloc(sizeof(long) * song_time);
+    long* hash_tab = malloc(sizeof(long) * (song_time+1));
     if(hash_tab == 0)
     {
         errx(3, "Failed to malloc hash_ta in hash_tab!");
@@ -89,10 +93,10 @@ long* hash_tab(fftw_complex* song_tab, size_t song_size)
     size_t t;
     for (t = 0; t < song_time; t++)
     {
+        printf("t = %zu\n",t);
         for (size_t freq = 40; freq < 300; freq++)
         {
             double mag = (double) clog(cabs(song_tab[t * chunk_size + freq]) + 1);
-
             int index = getIndex(freq);
 
             if (mag > points[t * chunk_size + index]) 
@@ -103,8 +107,9 @@ long* hash_tab(fftw_complex* song_tab, size_t song_size)
         }
         long h = hash(points[t * chunk_size + 0], points[t * chunk_size + 1], points[t * chunk_size + 2], points[t * chunk_size + 3]);
         //printf("%f, %f, %f, %f\n", points[t * chunk_size + 0], points[t * chunk_size + 1], points[t * chunk_size + 2], points[t * chunk_size + 3]);
-        //printf("hash = %ld\n", h);
-        *(hash_tab + t) = h;
+        printf("hash = %ld\n", h);
+        printf("(%f,%f,%f,%f)\n",points[t * chunk_size + 0], points[t * chunk_size + 1], points[t * chunk_size + 2], points[t * chunk_size + 3]);
+        hash_tab[t] = h;
     } 
 
     //printf("t = %ld\n", t);

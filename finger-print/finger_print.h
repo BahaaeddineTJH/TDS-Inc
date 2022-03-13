@@ -9,11 +9,11 @@
 #include <err.h>
 #include <errno.h>
 
-#include "fourrier.h"
+#include "../fourrier/fourrier.h"
 
-fftw_complex* create_tab(double* song, size_t song_size);
+fftw_complex* create_tab(double* song, songinfo* s_info);
 long hash(long p1, long p2, long p3, long p4);
 int getIndex(int freq);
-long* hash_tab(fftw_complex* song_tab, size_t song_size);
+long* hash_tab(fftw_complex* song_tab, songinfo* s_info);
 
 #endif
