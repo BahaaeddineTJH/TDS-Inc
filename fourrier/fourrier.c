@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <sox.h>
 #include <err.h>
+#include <errno.h>
 
 #define BUFFER_SIZE 512
 
@@ -37,8 +38,10 @@ double* get_data(char* file, int* n, double* sample_size){
 fftw_complex* fourrier_transform(double* in, int n){
     printf("start fourier\n");
     fftw_complex* out = fftw_alloc_complex(n*sizeof(fftw_complex));
-    if(!out)
-        errx(1,"Could not allocate");
+    if(!out){
+        perror("malloc fourrier output");
+        exit(errno);
+    }
     printf("alloc done\n");
     fftw_plan plan = fftw_plan_dft_r2c_1d(n,in, out,FFTW_ESTIMATE | FFTW_DESTROY_INPUT);
     printf("plan done\n");
