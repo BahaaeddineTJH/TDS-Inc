@@ -6,53 +6,52 @@
 #include <netdb.h>
 #include <unistd.h>
 #include <err.h>
-#include <arpa/inet.h>
 #include <signal.h>
 
 int main(int argc, char** argv)
 {
-    if (argc != 3)
+    if (argc != 2)
         errx(EXIT_FAILURE, "Usage:\n"
-                           "Arg 1 = Port number (e.g. 2048)"
-                           "Arg 2 = ip address (e.g. 127.0.0.1)");
+                "Arg 1 = Port number (e.g. 2048)");
     char* port = argv[1];
+
     struct addrinfo hints;
-    memset(&hints, 0, sizeof(hints));
+    struct addrinfo* results;
+    memset(&hints,0,sizeof(struct addrinfo));
     hints.ai_family = AF_INET;
+    hints.ai_flags = AI_PASSIVE;
     hints.ai_socktype = SOCK_STREAM;
 
-    int server_socket = socket(hints.ai_family, hints.ai_socktype, 0);
-    if (server_socket == -1){
-        errx(1,"socket error");
+    int e = getaddrinfo(NULL,port,&hints,&results);
+    if(e)
+        errx(1,"Fail getting address on port %s: %s",
+                port,gai_strerror(e));
+
+    struct addrinfo* ai;
+    int sck;
+    for(ai=results; ai!=NULL; ai=ai->ai_next){
+        sck = socket(ai->ai_family,ai->ai_socktype,ai->ai_protocol);
+        if(sck == -1) continue;
+        int rvalue = 1;
+        if(setsockopt(sck,SOL_SOCKET,SO_REUSEADDR,&rvalue,sizeof(int)) == -1)
+            errx(1,"Could not set sockopt");
+        if(bind(sck,ai->ai_addr,ai->ai_addrlen) != -1) break;
+        close(sck);
     }
-    int rvalue = 1;
-    if (setsockopt(server_socket, SOL_SOCKET, SO_REUSEADDR, &rvalue, sizeof(int)) == -1){
-        errx(1,"Couldn't set socket's option");
-    }
+    freeaddrinfo(results);
+    if(ai == NULL)
+        errx(1,"Could not bind");
+    if(listen(sck,5) == -1)
+        errx(1,"Could not listen");
 
-    struct sockaddr_in server_addr, client_addr;
-    char* ip = argv[2];
-    memset(&server_addr,0,sizeof(server_addr));
-    server_addr.sin_family = hints.ai_family;
-    server_addr.sin_port = atoi(port);
-    server_addr.sin_addr.s_addr = inet_addr(ip);
-
-    if (bind(server_socket, (struct sockaddr*) &server_addr, sizeof(server_addr)) == -1) {
-        perror("bind");
-        exit(1);
-    }
-
-    if (listen(server_socket, 5) == -1)
-        errx(1,"listen error");
-
+    printf("Listening to port %s\n",port);
     printf("Waiting for connections...\n");
     while (1) {
-        socklen_t socklen = sizeof(client_addr);
-        int client = accept(server_socket, (struct sockaddr *)&client_addr, &socklen);
+        int client = accept(sck, NULL, NULL);
         if (client == -1)
             errx(1, "Couldn't connect to peer");
         if (!fork()){
-            close(server_socket);
+            close(sck);
             printf("New connection (pid = %i)\n",getpid());
             /*
              * action for client

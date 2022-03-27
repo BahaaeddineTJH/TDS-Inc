@@ -4,36 +4,39 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include <arpa/inet.h>
+#include <netdb.h>
 #include <err.h>
 
 int main(int argc, char** argv) {
     if (argc != 3)
         errx(EXIT_FAILURE, "Usage:\n"
-                           "Arg 1 = Port number (e.g. 2048)"
-                           "Arg 2 = ip address (e.g. 127.0.0.1)");
-    int port = atoi(argv[1]);
-    char *ip =argv[2];
+                "Arg 1 = ip address (e.g. 127.0.0.1)\n"
+                "Arg 2 = Port number (e.g. 2048)\n");
 
-    int sock;
-    struct sockaddr_in addr;
+    struct addrinfo hints;
+    struct addrinfo* results;
+    memset(&hints,0,sizeof(struct addrinfo));
+    hints.ai_family = AF_INET;
+    hints.ai_socktype = SOCK_STREAM;
+    int e = getaddrinfo(argv[1],argv[2],&hints,&results);
+    if(e)
+        errx(1,"Fail getting address on %s:%s : %s",
+                argv[1],argv[2],gai_strerror(e));
 
-    sock = socket(AF_INET, SOCK_STREAM, 0);
-    if (sock < 0){
-        perror("[-]Socket error");
-        exit(1);
+    struct addrinfo* ai;
+    int sck;
+    int cnx;
+    for(ai=results; ai!=NULL; ai=ai->ai_next){
+        sck = socket(ai->ai_family,ai->ai_socktype,ai->ai_protocol);
+        if(sck == -1) continue;
+        cnx = connect(sck,ai->ai_addr,ai->ai_addrlen);
+        if (cnx != -1) break;
+        close(sck);
     }
-    printf("[+]TCP server socket created.\n");
+    freeaddrinfo(results);
 
-    memset(&addr, 0, sizeof(addr));
-    addr.sin_family = AF_INET;
-    addr.sin_port = port;
-    addr.sin_addr.s_addr = inet_addr(ip);
-
-    if(connect(sock, (struct sockaddr*)&addr, sizeof(addr)) == -1){
-        perror("connect");
-        exit(EXIT_FAILURE);
-    }
+    if(cnx == -1)
+        errx(1,"Connection failed.");
     printf("Connected to the server.\n");
     /*
      *  send request
