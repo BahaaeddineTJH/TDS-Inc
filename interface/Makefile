@@ -1,6 +1,6 @@
 #Makefile
 
-CC = gcc -rdynamic
+CC = gcc 
 
 CPPFLAGS =  `pkg-config gtk+-3.0 --cflags` -MMD
 CFLAGS = -Wall -Wextra -std=c99 -g
