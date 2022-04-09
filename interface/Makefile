@@ -4,8 +4,8 @@ CC = gcc
 
 CPPFLAGS =  `pkg-config gtk+-3.0 --cflags` -MMD
 CFLAGS = -Wall -Wextra -std=c99 -g
-LDFLAGS =
-LDLIBS = `pkg-config gtk+-3.0 --libs` -lfftw3 -lm -lsox
+LDFLAGS = 
+LDLIBS = `pkg-config gtk+-3.0 --libs` -lfftw3 -lm -lsox -rdynamic
 
 
 all: main save
