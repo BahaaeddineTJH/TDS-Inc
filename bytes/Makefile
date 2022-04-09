@@ -15,7 +15,10 @@ read.o : read.c read.h
 clean:
 	${RM} test
 	${RM} test.o
+	${RM} test.d
 	${RM} read.o
+	${RM} read.d
 	${RM} write.o
+	${RM} write.d
 
 # END

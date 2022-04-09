@@ -28,8 +28,12 @@ clean:
 	${RM} save.o
 	${RM} save.d
 	${RM} ../fourrier/fourrier.o
+	${RM} ../fourrier/fourrier.d
 	${RM} ../finger-print/finger_print.o
+	${RM} ../finger-print/finger_print.d
 	${RM} ../bytes/read.o 
+	${RM} ../bytes/read.d
 	${RM} ../bytes/write.o
+	${RM} ../bytes/write.d
 
 # END

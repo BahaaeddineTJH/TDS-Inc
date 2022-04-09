@@ -15,7 +15,10 @@ finger_print.o : finger_print.c finger_print.h ../fourrier/fourrier.o
 clean:
 	${RM} test
 	${RM} test.o
+	${RM} test.d
 	${RM} ../fourrier/fourrier.o
+	${RM} ../fourrier/fourrier.d
 	${RM} finger_print.o
+	${RM} finger_print.d
 
 # END
