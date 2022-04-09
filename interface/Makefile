@@ -2,10 +2,10 @@
 
 CC = gcc -rdynamic
 
-CPPFLAGS =  `pkg-config gtk+-3.0 --cflags sdl` -MMD -lfftw3 -lm -lsox
+CPPFLAGS =  `pkg-config gtk+-3.0 --cflags` -MMD -lfftw3 -lm -lsox
 CFLAGS = -Wall -Wextra -std=c99 -g
 LDFLAGS =
-LDLIBS = `pkg-config gtk+-3.0 --libs sdl` -lSDL_image -lfftw3 -lm -lsox
+LDLIBS = `pkg-config gtk+-3.0 --libs` -lfftw3 -lm -lsox
 
 
 all: main save
