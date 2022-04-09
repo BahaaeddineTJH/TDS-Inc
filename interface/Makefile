@@ -2,7 +2,7 @@
 
 CC = gcc -rdynamic
 
-CPPFLAGS =  `pkg-config gtk+-3.0 --cflags` -MMD -lfftw3 -lm -lsox
+CPPFLAGS =  `pkg-config gtk+-3.0 --cflags` -MMD
 CFLAGS = -Wall -Wextra -std=c99 -g
 LDFLAGS =
 LDLIBS = `pkg-config gtk+-3.0 --libs` -lfftw3 -lm -lsox
