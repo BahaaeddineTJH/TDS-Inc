@@ -8,12 +8,12 @@ LDFLAGS =
 LDLIBS = `pkg-config gtk+-3.0 --libs` -lfftw3 -lm -lsox -rdynamic
 
 
-all: main save
+all: main
 
-main : main.o ../finger-print/finger_print.o ../fourrier/fourrier.o ../bytes/read.o ../bytes/write.o
-save : save.o ../bytes/write.o
+main : main.o ../finger-print/finger_print.o ../fourrier/fourrier.o ../bytes/read.o ../bytes/write.o ../Research/research.o
 ../finger-print/finger_print.o : ../finger-print/finger_print.c ../finger-print/finger_print.h ../fourrier/fourrier.o
 ../fourrier/fourrier.o : ../fourrier/fourrier.c ../fourrier/fourrier.h
+../research/research.o : ../Research/research.c ../Research/research.h ../bytes/write.o
 ../bytes/read.o : ../bytes/read.c ../bytes/read.h
 ../bytes/write.o : ../bytes/write.c ../bytes/write.h
 
@@ -25,8 +25,6 @@ clean:
 	${RM} save
 	${RM} main.d
 	${RM} main.o
-	${RM} save.o
-	${RM} save.d
 	${RM} ../fourrier/fourrier.o
 	${RM} ../fourrier/fourrier.d
 	${RM} ../finger-print/finger_print.o
@@ -35,5 +33,7 @@ clean:
 	${RM} ../bytes/read.d
 	${RM} ../bytes/write.o
 	${RM} ../bytes/write.d
+	${RM} ../Research/research.o
+	${RM} ../Research/research.d
 
 # END

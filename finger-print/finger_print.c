@@ -15,7 +15,7 @@
 
 fftw_complex* create_tab(double* song, songinfo* s_info)
 {
-    printf("beginning of create_tab\n");
+    //printf("beginning of create_tab\n");
     
     size_t song_size = s_info->size;
 
@@ -48,9 +48,9 @@ fftw_complex* create_tab(double* song, songinfo* s_info)
         free(cur);
     }
 
-    printf("%i\n",n);
+    //printf("%i\n",n);
 
-    printf("end of create_tab\n");
+    //printf("end of create_tab\n");
     return res;    
 }
 
@@ -72,7 +72,7 @@ int getIndex(int freq)
 
 long* hash_tab(fftw_complex* song_tab, songinfo* s_info)
 {
-    printf("beginning of hash_tab\n");
+    //printf("beginning of hash_tab\n");
 
     size_t song_size = s_info->size;
     size_t chunk_size = s_info->sample_size * s_info->nb_channels;
@@ -107,11 +107,11 @@ long* hash_tab(fftw_complex* song_tab, songinfo* s_info)
             }
         }
         long h = hash(points[t * chunk_size + 0], points[t * chunk_size + 1], points[t * chunk_size + 2], points[t * chunk_size + 3]);
-        printf("hash = %ld\n", h);
-        printf("(%f,%f,%f,%f)\n",points[t * chunk_size + 0], points[t * chunk_size + 1], points[t * chunk_size + 2], points[t * chunk_size + 3]);
+        //printf("hash = %ld\n", h);
+        //printf("(%f,%f,%f,%f)\n",points[t * chunk_size + 0], points[t * chunk_size + 1], points[t * chunk_size + 2], points[t * chunk_size + 3]);
         hash_tab[t] = h;
     } 
 
-    printf("end of hash_tab\n");
+    //printf("end of hash_tab\n");
     return hash_tab;
 }

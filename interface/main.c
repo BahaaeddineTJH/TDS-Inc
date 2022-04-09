@@ -21,6 +21,7 @@
 #include "../finger-print/finger_print.h"
 #include "../bytes/read.h"
 #include "../bytes/write.h"
+#include "../Research/research.h"
 
 song_name z;
 
@@ -127,75 +128,6 @@ void load_file()
     gtk_widget_destroy (dialog);
 }
 
-unsigned int countSetBits(unsigned int n)
-{
-    unsigned int count = 0;
-    while (n) {
-        count += n & 1;
-        n >>= 1;
-    }
-    return count;
-}
-
-int research(long* file, long* p, size_t duration, size_t len)
-{
-    int nb = 0;
-    size_t i = 0;
-    while(i < len && i < duration)
-    {
-        //printf("%ld, %ld\n", *(p + i), *(file + i));
-        unsigned int count = countSetBits(*(p + i)^*(file + i));
-        //printf("%d\n", count);
-        nb += count;
-        i += 1;
-    }
-    return nb;
-}
-
-char* open_all_files(long* p, size_t duration)
-{
-    struct dirent *de;
-    DIR *dr = opendir("bin/");
-  
-    if (dr == NULL)
-    {
-        errx(EXIT_FAILURE, "Could not open current directory");
-    }
-
-    char* b = "bin/";
-    int count = 2147483647;
-    char* result;
-    while ((de = readdir(dr)) != NULL)
-    {
-        if(strcmp(de->d_name, ".") && strcmp(de->d_name, ".."))
-        {
-            char *c = malloc(strlen(de->d_name) + 5);
-            strcpy(c,b);
-            strcat(c,de->d_name);
-            //printf("%s\n",c);
-
-            size_t len = 0;
-            long* file = my_read(c, &len);
-            if(len >= duration)
-            {
-                int cur = research(file, p, duration, len);
-                //printf("%d\n", cur);
-                if(count > cur)
-                {
-                    count = cur;
-                    result = malloc(strlen(de->d_name) + 5);
-                    strcpy(result, c);
-                }
-            }
-            free(c);
-        }
-    }
-    //printf("%d\n", count);
-    //printf("%s\n", result);
-    closedir(dr);
-    return result;
-}
-
 
 /*void save(char* name, size_t duration, long* p)
 {
@@ -239,8 +171,6 @@ void run_shazam()
     free(in);
     long* p = hash_tab(tab, &s_info);
 
-    //save(z.name, duartion, p);
-    //my_write("Madonna - Music (Official Video)", s_info.duration, p);
 
     char* result = open_all_files(p, s_info.duration);
 

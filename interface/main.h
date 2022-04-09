@@ -23,6 +23,7 @@
 #include "../finger-print/finger_print.h"
 #include "../bytes/read.h"
 #include "../bytes/write.h"
+#include "../Research/research.h"
 
 
 GtkBuilder* get_builder();
