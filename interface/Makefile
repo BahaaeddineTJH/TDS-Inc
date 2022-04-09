@@ -1,18 +1,35 @@
 #Makefile
+
 CC = gcc -rdynamic
 
-CPPFLAGS =  `pkg-config gtk+-3.0 --cflags sdl` -MMD
+CPPFLAGS =  `pkg-config gtk+-3.0 --cflags sdl` -MMD -lfftw3 -lm -lsox
 CFLAGS = -Wall -Wextra -std=c99 -g
 LDFLAGS =
-LDLIBS = `pkg-config gtk+-3.0 --libs sdl` -lSDL_image -lm
+LDLIBS = `pkg-config gtk+-3.0 --libs sdl` -lSDL_image -lfftw3 -lm -lsox
 
-SRC = main.c
-OBJ = $(SRC:.c=.o)
-DEP = $(SRC:.c=.d)
 
-all : main
+all: main save
 
-main : $(OBJ)
+main : main.o ../finger-print/finger_print.o ../fourrier/fourrier.o ../bytes/read.o ../bytes/write.o
+save : save.o ../bytes/write.o
+../finger-print/finger_print.o : ../finger-print/finger_print.c ../finger-print/finger_print.h ../fourrier/fourrier.o
+../fourrier/fourrier.o : ../fourrier/fourrier.c ../fourrier/fourrier.h
+../bytes/read.o : ../bytes/read.c ../bytes/read.h
+../bytes/write.o : ../bytes/write.c ../bytes/write.h
 
-clean :
-		$(RM) $(OBJ) $(OBJ_TESTS) $(DEP) $(DEP_TESTS) main && clear
+
+.PHONY: clean
+
+clean:
+	${RM} main
+	${RM} save
+	${RM} main.d
+	${RM} main.o
+	${RM} save.o
+	${RM} save.d
+	${RM} ../fourrier/fourrier.o
+	${RM} ../finger-print/finger_print.o
+	${RM} ../bytes/read.o 
+	${RM} ../bytes/write.o
+
+# END
