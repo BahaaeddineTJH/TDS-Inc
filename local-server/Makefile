@@ -12,8 +12,10 @@ DEP = ${SRC:.c=.d}
 
 all: server client
 
-server: server.o
-client: client.o
+
+server: server.o ../Research/research.o ../bytes/read.o
+client: LDLIBS += -lfftw3 -lm -lsox
+client: client.o ../finger-print/finger_print.o ../fourrier/fourrier.o
 
 
 -include ${DEP}

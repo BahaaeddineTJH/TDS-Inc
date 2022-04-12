@@ -8,6 +8,20 @@
 #include <err.h>
 #include <signal.h>
 
+#include "../Research/research.h"
+
+#define BUFFER_SIZE 256
+
+void rewrite(int fd, void* buf, size_t len){
+    size_t index = 0;
+    while(index < len){
+        ssize_t r = write(fd,buf+index,len-index);
+        if(r == -1)
+            errx(1,"Could not write into fd");
+        len += r;
+    }
+}
+
 int main(int argc, char** argv)
 {
     if (argc != 2)
@@ -53,9 +67,33 @@ int main(int argc, char** argv)
         if (!fork()){
             close(sck);
             printf("New connection (pid = %i)\n",getpid());
-            /*
-             * action for client
-             */
+
+            char* data = NULL;
+            char buffer[BUFFER_SIZE];
+            size_t len = 0;
+            ssize_t r;
+            while ((r = read(client,buffer,BUFFER_SIZE)) != 0){
+                if(r == -1)
+                    errx(1,"Could not read from fd");
+                data = realloc(data,len+r);
+                for (ssize_t i = 0; i < r; ++i) {
+                    data[len+i] = buffer[i];
+                }
+                len += r;
+            }
+
+            long* hash = (long*) data;
+            char* answer = open_all_files(hash,len*sizeof(long));
+            if(!answer){
+                char err[] = "not found";
+                rewrite(client,err, strlen(err));
+            }
+            else{
+                rewrite(client,answer, strlen(answer));
+                free(data);
+                free(answer);
+            }
+
             close(client);
             printf("Close connection (pid = %i)\n",getpid());
             exit(0);
