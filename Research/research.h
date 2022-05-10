@@ -16,7 +16,7 @@
 
 unsigned int countSetBits(unsigned int n);
 int research(long* file, long* p, size_t duration, size_t len);
-char* open_all_files(long* p, size_t duration);
+char* open_all_files(long* p, char* path,  size_t duration);
 
 
 #endif

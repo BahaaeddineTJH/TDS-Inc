@@ -8,11 +8,57 @@
 #include <err.h>
 #include <signal.h>
 
+#include "../Research/research.h"
+
+#define BUF_SIZE 256
+
+void rewrite(int fd,void* buf,size_t len){
+    size_t i = 0;
+    while(i < len){
+        ssize_t r = write(fd,buf+i,len-i);
+        if(r == -1)
+            errx(1,"Could not write into fd");
+        i += (size_t) r;
+    }
+}
+
+long* read_data(int client,size_t* len){
+    char buf[BUF_SIZE];
+    char* data = NULL;
+    ssize_t r;
+    *len = 0;
+    while((r = read(client,buf,BUF_SIZE)) != 0){
+        if(r == -1)
+            errx(1,"Could not read from client");
+        data = realloc(data,*len+r);
+        memcpy(data+*len,buf,r);
+        *len += (size_t) r;
+        if(data[*len-1] == '\n')
+            break;
+    }
+    *len /= sizeof(long);
+    return (long*)data;
+}
+
+void process_client(int client,char* path){
+    size_t len;
+    long* data = read_data(client,&len);
+    char* result = open_all_files(data,path,len);
+    if(!result){
+        char err_msg[] = "not found";
+        rewrite(client,err_msg,strlen(err_msg)+1);
+    }
+    else{
+        rewrite(client,result,strlen(result)+1);
+    }
+}
+
 int main(int argc, char** argv)
 {
-    if (argc != 2)
+    if (argc != 3)
         errx(EXIT_FAILURE, "Usage:\n"
-                "Arg 1 = Port number (e.g. 2048)");
+                "Arg 1 = Port number (e.g. 2048)"
+                "Arg 2 = Path to bin");
     char* port = argv[1];
 
     struct addrinfo hints;
@@ -53,9 +99,7 @@ int main(int argc, char** argv)
         if (!fork()){
             close(sck);
             printf("New connection (pid = %i)\n",getpid());
-            /*
-             * action for client
-             */
+            process_client(client,argv[2]);
             close(client);
             printf("Close connection (pid = %i)\n",getpid());
             exit(0);
