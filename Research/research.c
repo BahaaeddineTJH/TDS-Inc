@@ -39,29 +39,33 @@ long research(long* file, long* p, size_t duration, size_t len)
     return nb;
 }
 
-char* open_all_files(long* p, size_t duration)
+char* open_all_files(long* p, char* path,  size_t duration)
 {
     struct dirent *de;
-    DIR *dr = opendir("bin/");
+    char* path2 = calloc(strlen(path)+2,1);
+    strcpy(path2,path);
+    printf("path2 = %s\n",path2);
+    path2[strlen(path)] = '/';
+    DIR *dr = opendir(path2);
+    printf("path2 = %s\n",path2);
   
     if (dr == NULL)
     {
         errx(EXIT_FAILURE, "Could not open current directory");
     }
 
-    char* b = "bin/";
-    char* result;
+    char* b = path2;
+    char* result = NULL;
     long threshold = 10;
     long percentage;
     while ((de = readdir(dr)) != NULL)
     {
         if(strcmp(de->d_name, ".") && strcmp(de->d_name, ".."))
         {
-            char *c = malloc(strlen(de->d_name) + 5);
+            char *c = malloc(strlen(de->d_name) + strlen(path2) + 1);
             strcpy(c,b);
             strcat(c,de->d_name);
             //printf("%s\n",c);
-
             size_t len = 0;
             long* file = my_read(c, &len);
             //if(len >= duration)
@@ -73,14 +77,16 @@ char* open_all_files(long* p, size_t duration)
                 //printf("%ld\n", percentage);    
                 if(percentage <= threshold)
                 {
-                    result = malloc(strlen(de->d_name) + 5);
+                    result = calloc(strlen(de->d_name) + strlen(path2)+1,1);
                     strcpy(result, c);
+                    free(c);
                     break;
                 }
             }
             free(c);
         }
     }
+    printf("test\n");
     //printf("%s\n", result);
     closedir(dr);
     return result;

@@ -6,6 +6,37 @@
 #include <unistd.h>
 #include <netdb.h>
 #include <err.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+
+#include "../fourrier/fourrier.h"
+#include "../finger-print/finger_print.h"
+
+#define BUF_SIZE 256
+
+void rewrite(int fd,void* buf,size_t len){
+    size_t i = 0;
+    while(i < len){
+        ssize_t r = write(fd,buf+i,len-i);
+        i += (size_t) r;
+    }
+}
+
+char* read_data(int fd){
+     char buf[BUF_SIZE];
+     char* data = NULL;
+     size_t len = 0;
+     ssize_t r;
+     while((r = read(fd,buf,BUF_SIZE)) != 0){
+         if(r == -1)
+             errx(1,"Could not read from client");
+         data = realloc(data,len+r);
+         memcpy(data+len,buf,r);
+         len += (size_t) r;
+     }
+     return data;
+ }
+
 
 #include "../finger-print/finger_print.h"
 
@@ -23,16 +54,12 @@ void rewrite(int fd, void* buf, size_t len){
 
 long* wrap_get_hash(char* path,size_t* len){
     sox_format_init();
-    printf("Hello\n");
     songinfo s_info;
     double* in = get_data(path,&s_info);
-    printf("Hello\n");
     fftw_complex* tab = create_tab(in, &s_info);
     free(in);
-    printf("Hello\n");
     long* p = hash_tab(tab, &s_info);
     free(tab);
-    printf("Hello\n");
     *len = s_info.duration;
 
     sox_format_quit();
@@ -43,7 +70,8 @@ int main(int argc, char** argv) {
     if (argc != 4)
         errx(EXIT_FAILURE, "Usage:\n"
                 "Arg 1 = ip address (e.g. 127.0.0.1)\n"
-                "Arg 2 = Port number (e.g. 2048)\n");
+                "Arg 2 = Port number (e.g. 2048)\n"
+                "Arg 3 = path to mp3\n");
 
     struct addrinfo hints;
     struct addrinfo* results;
@@ -56,18 +84,17 @@ int main(int argc, char** argv) {
                 argv[1],argv[2],gai_strerror(e));
 
     struct addrinfo* ai;
-    int sck;
-    int cnx;
+    int cnx = -1;
     for(ai=results; ai!=NULL; ai=ai->ai_next){
-        sck = socket(ai->ai_family,ai->ai_socktype,ai->ai_protocol);
-        if(sck == -1) continue;
-        cnx = connect(sck,ai->ai_addr,ai->ai_addrlen);
+        cnx  = socket(ai->ai_family,ai->ai_socktype,ai->ai_protocol);
+        if(cnx == -1) continue;
+        connect(cnx,ai->ai_addr,ai->ai_addrlen);
         if (cnx != -1) break;
-        close(sck);
+        close(cnx);
     }
     freeaddrinfo(results);
 
-    if(cnx == -1)
+    if(!ai)
         errx(1,"Connection failed.");
     printf("Connected to the server.\n");
 
@@ -81,25 +108,12 @@ int main(int argc, char** argv) {
 
     printf("Waiting for answer...\n");
 
-    //get answer from server
-    char* answer = NULL;
-    char buffer[BUFFER_SIZE];
-    size_t answer_len = 0;
-    ssize_t r;
-    while ((r = read(cnx,buffer,BUFFER_SIZE)) != 0){
-        if(r == -1)
-            errx(1,"Could not read from fd");
-        answer = realloc(answer,answer_len+r);
-        for (ssize_t i = 0; i < r; ++i) {
-            answer[len+i] = buffer[i];
-        }
-        len += r;
-    }
-    answer = realloc(answer,answer_len+1);
-    answer[answer_len] = '\0';
+    rewrite(cnx,hash,s_info.duration*sizeof(long));
+    rewrite(cnx,"\n",1);
+    free(hash);
+    printf("data sent\n");
+    char* answer = read_data(cnx);
     printf("the answer is : %s\n",answer);
-
-
     free(answer);
 
     close(cnx);
