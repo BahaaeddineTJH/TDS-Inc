@@ -87,16 +87,11 @@ int main(int argc, char** argv) {
     size_t len;
     long* hash = wrap_get_hash(argv[4],&len);
     printf("Hash Done.\n");
-    write(cnx,hash,len*sizeof(long));
-    printf("Hash sent\n");
-    free(hash);
-
-    printf("Waiting for answer...\n");
-
     rewrite(cnx,hash,len*sizeof(long));
     rewrite(cnx,"\n",1);
     free(hash);
     printf("data sent\n");
+    printf("Waiting for answer...\n");
     char* answer = read_data(cnx);
     printf("the answer is : %s\n",answer);
     free(answer);
