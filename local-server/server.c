@@ -7,10 +7,85 @@
 #include <unistd.h>
 #include <err.h>
 #include <signal.h>
+#include <pthread.h>
 
+#include "shared_queue.h"
 #include "../Research/research.h"
 
 #define BUF_SIZE 256
+#define THREAD_COUNT 4
+
+typedef struct {
+    int fd;
+    long* hash;
+} rq_info;
+
+int quit = 0;
+shared_queue* sq;
+
+void cleanup_client(int fd){
+    sem_wait(&sq->lock);
+    queue* head = sq->queue;
+    rq_info* rq = head->val;
+    while(rq->fd == fd){
+        head = queue_remove(head,head);
+        if(!head) break;
+        rq = head->val;
+    }
+    queue* cur = head->next;
+    while(cur && cur != head){
+        rq = cur->val;
+        if(rq->fd == fd){
+            cur = queue_remove(head,cur);
+            sem_wait(&sq->size);    
+        }
+    }
+    sq->queue = head;
+    sem_post(&sq->lock);
+}
+
+void* client_handler(void* arg){
+    int fd = (int)((long)arg);
+
+    char* buf[sizeof(long)];
+    size_t i = 0;
+    ssize_t r;
+    while(!quit && (r=read(fd,buf+i,sizeof(long)-i)) != 0){
+        if(r == -1) break;
+        i += r;
+        if(i == sizeof(long)){
+            long* hash = malloc(sizeof(long));
+            memcpy(hash,buf,sizeof(long));
+            rq_info* rq = malloc(sizeof(rq_info));
+            rq->fd = fd;
+            rq->hash = hash;
+            shared_queue_push(sq,rq);
+        }
+    }
+
+    cleanup_client(fd);
+
+    close(fd);
+    pthread_exit(NULL);
+}
+
+void* search_handler(void* arg __attribute((unused))){
+    while(!quit){
+
+        rq_info* rq = shared_queue_pop(sq);
+
+        //TODO:
+        //Search with arg->hash
+        //Send response if matched
+        
+        char[] response = "coucou\n";
+        rewrite(rq->fd,response,strlen(response));
+
+        free(rq);
+    }
+    pthread_exit(NULL);
+
+}
 
 void rewrite(int fd,void* buf,size_t len){
     size_t i = 0;
@@ -59,6 +134,15 @@ int main(int argc, char** argv)
         errx(EXIT_FAILURE, "Usage:\n"
                 "Arg 1 = Port number (e.g. 2048)"
                 "Arg 2 = Path to bin");
+
+    sq = shared_queue_new();
+    pthread_t thr[THREAD_COUNT];
+
+    for(size_t i=0; i<THREAD_COUNT; ++i){
+        if(pthread_create(&thr[i],NULL,search_handler,sq))
+            errx(1,"Could not create thread");
+    }
+
     char* port = argv[1];
 
     struct addrinfo hints;
@@ -96,15 +180,11 @@ int main(int argc, char** argv)
         int client = accept(sck, NULL, NULL);
         if (client == -1)
             errx(1, "Couldn't connect to peer");
-        if (!fork()){
-            close(sck);
-            printf("New connection (pid = %i)\n",getpid());
-            process_client(client,argv[2]);
+        pthread_t t;
+        if(pthread_create(&t,NULL,client_handler,(void *)((long) client))){
             close(client);
-            printf("Close connection (pid = %i)\n",getpid());
-            exit(0);
         }
-        close(client);
-        signal(SIGCHLD,SIG_IGN);
     }
+
+    return 0;
 }

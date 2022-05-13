@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include "queue.h"
 
-queue* queue_push(queue* start, int val)
+queue* queue_push(queue* start, void* val)
 {
     queue* q = malloc(sizeof(queue));
     if (!q)
@@ -14,7 +14,7 @@ queue* queue_push(queue* start, int val)
     return q;
 }
 
-queue* queue_pop(queue* start, int *pval)
+queue* queue_pop(queue* start, void** pval)
 {
     queue* q = start;
     while (q->next){
@@ -22,12 +22,36 @@ queue* queue_pop(queue* start, int *pval)
             break;
         q = q->next;
     }
+
     if (pval)
         *pval = q->val;
+    else
+        free(q->val);
+
     if (q != q->next)
         start->next = q->next;
     else
         start = NULL;
+    free(q);
+    return start;
+}
+
+queue* queue_remove(queue* start,queue* q){
+    queue* cur = start;
+    
+    if(start == q){
+        cur = cur->next;
+        if(cur == cur->next)
+            cur = NULL;
+        free(start);
+        return cur;
+    }
+
+    while(cur->next != q)
+        cur = cur->next;
+    
+    cur->next = q->next;
+    free(q->val);
     free(q);
     return start;
 }

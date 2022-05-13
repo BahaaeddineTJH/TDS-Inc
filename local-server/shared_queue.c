@@ -15,7 +15,7 @@ shared_queue* shared_queue_new()
     return sq;
 }
 
-void shared_queue_push(shared_queue* sq, int val)
+void shared_queue_push(shared_queue* sq, void* val)
 {
     if (sem_wait(&sq->lock) == -1)
         errx(1,"Couldn't wait semaphore");
@@ -26,12 +26,12 @@ void shared_queue_push(shared_queue* sq, int val)
         errx(1,"Couldn't post semaphore");
 }
 
-int shared_queue_pop(shared_queue* sq)
+void* shared_queue_pop(shared_queue* sq)
 {
     if (sem_wait(&sq->size) == -1)
         errx(1,"Couldn't wait semaphore");
 
-    int val;
+    void* val;
     if (sem_wait(&sq->lock) == -1)
         errx(1,"Couldn't wait semaphore");
     sq->queue = queue_pop(sq->queue,&val);

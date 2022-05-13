@@ -37,21 +37,6 @@ char* read_data(int fd){
      return data;
  }
 
-
-#include "../finger-print/finger_print.h"
-
-#define BUFFER_SIZE 256
-
-void rewrite(int fd, void* buf, size_t len){
-    size_t index = 0;
-    while(index < len){
-        ssize_t r = write(fd,buf+index,len-index);
-        if(r == -1)
-            errx(1,"Could not write into fd");
-        len += r;
-    }
-}
-
 long* wrap_get_hash(char* path,size_t* len){
     sox_format_init();
     songinfo s_info;
@@ -108,7 +93,7 @@ int main(int argc, char** argv) {
 
     printf("Waiting for answer...\n");
 
-    rewrite(cnx,hash,s_info.duration*sizeof(long));
+    rewrite(cnx,hash,len*sizeof(long));
     rewrite(cnx,"\n",1);
     free(hash);
     printf("data sent\n");

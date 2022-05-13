@@ -6,14 +6,16 @@ CFLAGS = -Wall -Wextra -std=c99 -g
 LDFLAGS =
 LDLIBS =
 
-SRC = server.c client.c
+SRC = server.c client.c queue.c shared_queue.c
 OBJ = ${SRC:.c=.o}
 DEP = ${SRC:.c=.d}
 
 all: server client
 
+shared_queue.o: queue.o
 
-server: server.o ../Research/research.o ../bytes/read.o
+server: LDLIBS += -lpthread
+server: server.o shared_queue.o queue.o ../Research/research.o ../bytes/read.o
 client: LDLIBS += -lfftw3 -lm -lsox
 client: client.o ../finger-print/finger_print.o ../fourrier/fourrier.o
 
