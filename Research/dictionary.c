@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include "dictionary.h"
 #include <string.h>
+#include <stdio.h>
 
 dictionary* dic_create(){
     dictionary* dic = malloc(sizeof(dictionary));
@@ -11,9 +12,9 @@ dictionary* dic_create(){
 }
 
 void dic_append(dictionary* dic, char* key, void* data){
-    dic->keys = realloc(dic->keys,sizeof(long)*(dic->len+1));
+    dic->keys = realloc(dic->keys,sizeof(char*)*(dic->len+1));
     dic->keys[dic->len] = key;
-    dic->datas = realloc(dic->datas,sizeof(long)*(dic->len+1));
+    dic->datas = realloc(dic->datas,sizeof(void*)*(dic->len+1));
     dic->datas[dic->len] = data;
     dic->len += 1;
 }

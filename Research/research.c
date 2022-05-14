@@ -48,45 +48,42 @@ long research2(long* db_song,long* hash, size_t len_song, size_t len_hash){
     printf("len_hash = %zu\n",len_hash);
     printf("len_song = %zu\n",len_song);
     for(size_t i=0; i<len_hash; ++i){
-        printf("i = %zu\n",i);
         long h = hash[i];
-        for(size_t j=0; j< len_song; ++j){
-            printf("j = %zu\n",j);
-            if(h == db_song[j]){
-                for(size_t h=0; h<i; ++h){
-                    int offset = abs((int) j - (int) i);
-                    char* c_offset;
-                    asprintf(&c_offset, "%d", offset);
-                    if(!dic){
-                        dic = dic_create();
-                        long* count = malloc(sizeof(long));
-                        *count = 1;
+        for(size_t j=0; j<len_song; ++j){
+            if(countSetBits(h^db_song[j]) < 10){
+                int offset = abs((int) i - (int) j);
+                printf("matched, offset = %d\n",offset);
+                char* c_offset;
+                asprintf(&c_offset, "%d", offset);
+                if(!dic){
+                    dic = dic_create();
+                    long* count = malloc(sizeof(long));
+                    *count = 1;
+                    max = max==0 ? 1 : max;
+                    dic_append(dic,c_offset,count);
+                    //printf("dic_append() done\n");
+                }
+                else{
+                    long* count = dic_get_data(dic,c_offset);
+                    long* c = malloc(sizeof(long));
+                    if(!count){
+                        *c = 1;
                         max = max==0 ? 1 : max;
-                        dic_append(dic,c_offset,count);
+                        dic_append(dic,c_offset,c);
                         //printf("dic_append() done\n");
                     }
                     else{
-                        long* count = dic_get_data(dic,c_offset);
-                        long* c = malloc(sizeof(long));
-                        if(!count){
-                            *c = 1;
-                            max = max==0 ? 1 : max;
-                            dic_append(dic,c_offset,c);
-                            //printf("dic_append() done\n");
-                        }
-                        else{
-                            *c = (*count) + 1;
-                            max = max<*c ? *c : max;
-                            dic_update(dic,c_offset,c);
-                            //printf("dic_update() done\n");
-                        }
+                        *c = (*count) + 1;
+                        max = max<*c ? *c : max;
+                        dic_update(dic,c_offset,c);
+                        //printf("dic_update() done\n");
                     }
                 }
             }
         }
     }
-
-    dic_destroy(dic);
+    if(dic)
+        dic_destroy(dic);
     return max;
 }
 
@@ -107,7 +104,7 @@ char* open_all_files(long* p, char* path,  size_t duration)
 
     char* b = path2;
     char* result = NULL;
-    long max;
+    long max = 0;
     while ((de = readdir(dr)) != NULL)
     {
         if(strcmp(de->d_name, ".") && strcmp(de->d_name, ".."))
@@ -118,14 +115,12 @@ char* open_all_files(long* p, char* path,  size_t duration)
             //printf("%s\n",c);
             size_t len = 0;
             long* file = my_read(c, &len);
-            {
-                long nb_match = research2(file, p, len, duration);
-                if(max < nb_match){
-                    max = nb_match;
-                    result = de->d_name;
-                }
+            long nb_match = research2(file, p, len, duration);
+            if(max < nb_match){
+                max = nb_match;
+                result = de->d_name;
             }
-            printf("%s score: %ld\n",de->d_name,max);
+            printf("%s score: %ld\n",de->d_name,nb_match);
             free(c);
         }
     }
