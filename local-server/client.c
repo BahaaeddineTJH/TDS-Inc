@@ -29,7 +29,7 @@ char* read_data(int fd){
      ssize_t r;
      while((r = read(fd,buf,BUF_SIZE)) != 0){
          if(r == -1)
-             errx(1,"Could not read from client");
+             errx(1,"Could not read from server");
          data = realloc(data,len+r);
          memcpy(data+len,buf,r);
          len += (size_t) r;
@@ -51,22 +51,17 @@ long* wrap_get_hash(char* path,size_t* len){
     return p;
 }
 
-int main(int argc, char** argv) {
-    if (argc != 4)
-        errx(EXIT_FAILURE, "Usage:\n"
-                "Arg 1 = ip address (e.g. 127.0.0.1)\n"
-                "Arg 2 = Port number (e.g. 2048)\n"
-                "Arg 3 = path to mp3\n");
-
+char* client(char* song_name, char* adresse, char* port) 
+{
     struct addrinfo hints;
     struct addrinfo* results;
     memset(&hints,0,sizeof(struct addrinfo));
     hints.ai_family = AF_INET;
     hints.ai_socktype = SOCK_STREAM;
-    int e = getaddrinfo(argv[1],argv[2],&hints,&results);
+    int e = getaddrinfo(adresse,port,&hints,&results);
     if(e)
         errx(1,"Fail getting address on %s:%s : %s",
-                argv[1],argv[2],gai_strerror(e));
+                adresse,port,gai_strerror(e));
 
     struct addrinfo* ai;
     int cnx = -1;
@@ -85,7 +80,7 @@ int main(int argc, char** argv) {
 
     //send song hash to server
     size_t len;
-    long* hash = wrap_get_hash(argv[3],&len);
+    long* hash = wrap_get_hash(song_name,&len);
     printf("Hash Done.\n");
     rewrite(cnx,hash,len*sizeof(long));
     rewrite(cnx,"\n",1);
@@ -94,9 +89,8 @@ int main(int argc, char** argv) {
     printf("Waiting for answer...\n");
     char* answer = read_data(cnx);
     printf("the answer is : %s\n",answer);
-    free(answer);
 
     close(cnx);
 
-    return 0;
+    return answer;
 }

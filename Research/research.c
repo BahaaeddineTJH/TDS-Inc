@@ -45,14 +45,13 @@ long research2(long* db_song,long* hash, size_t len_song, size_t len_hash){
     dictionary* dic = NULL;
     //printf("dic_create() done\n");
     long max = 0;
-    printf("len_hash = %zu\n",len_hash);
-    printf("len_song = %zu\n",len_song);
+    //printf("len_song = %zu\n",len_song);
     for(size_t i=0; i<len_hash; ++i){
         long h = hash[i];
         for(size_t j=0; j<len_song; ++j){
             if(countSetBits(h^db_song[j]) < 10){
                 int offset = abs((int) i - (int) j);
-                printf("matched, offset = %d\n",offset);
+                //printf("matched, offset = %d\n",offset);
                 char* c_offset;
                 asprintf(&c_offset, "%d", offset);
                 if(!dic){
@@ -92,10 +91,10 @@ char* open_all_files(long* p, char* path,  size_t duration)
     struct dirent *de;
     char* path2 = calloc(strlen(path)+2,1);
     strcpy(path2,path);
-    printf("path2 = %s\n",path2);
+    //printf("path2 = %s\n",path2);
     path2[strlen(path)] = '/';
     DIR *dr = opendir(path2);
-    printf("path2 = %s\n",path2);
+    //printf("path2 = %s\n",path2);
 
     if (dr == NULL)
     {
@@ -105,6 +104,8 @@ char* open_all_files(long* p, char* path,  size_t duration)
     char* b = path2;
     char* result = NULL;
     long max = 0;
+
+    //printf("len of hash = %zu\n",duration);
     while ((de = readdir(dr)) != NULL)
     {
         if(strcmp(de->d_name, ".") && strcmp(de->d_name, ".."))
@@ -116,11 +117,12 @@ char* open_all_files(long* p, char* path,  size_t duration)
             size_t len = 0;
             long* file = my_read(c, &len);
             long nb_match = research2(file, p, len, duration);
-            if(max < nb_match){
+            if(max < nb_match)
+            {
                 max = nb_match;
                 result = de->d_name;
+                printf("%s score: %ld\n",de->d_name,nb_match);
             }
-            printf("%s score: %ld\n",de->d_name,nb_match);
             free(c);
         }
     }

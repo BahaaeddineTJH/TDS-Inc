@@ -38,6 +38,8 @@ void save_output();
 typedef struct song_name
 {
     char* name;
+    char* adresse;
+    char* port;
 }song_name;
 
 

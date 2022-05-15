@@ -22,6 +22,7 @@
 #include "../bytes/read.h"
 #include "../bytes/write.h"
 #include "../Research/research.h"
+#include "../local-server/client.h"
 
 song_name z;
 
@@ -151,16 +152,10 @@ void run_shazam()
     GtkTextBuffer *b = GTK_TEXT_BUFFER(gtk_builder_get_object(get_builder(), "output_buffer"));
 
     //check if z.name is
-    if(z.name == NULL)
+    if(z.name == NULL || strlen(z.name) == 0)
         load_file();
 
-    size_t i = strlen(z.name);
-    if(i == 0)
-    {
-        load_file();
-    }
-
-    //beginnig of shazam
+    /*//beginnig of shazam
     sox_format_init();
 
     songinfo s_info;
@@ -172,13 +167,16 @@ void run_shazam()
     long* p = hash_tab(tab, &s_info);
 
 
-    char* result = open_all_files(p, s_info.duration);
+    result = open_all_files(p, s_info.duration);
 
     free(tab);
     free(p);
-    sox_format_quit();
+    sox_format_quit();*/
+
+    char* result = client(z.name, z.adresse, z.port);
+    //printf("result = %s\n", result);
         
-    char* c = "The reuslt is : ";
+    char* c = "The result is : ";
     gtk_text_buffer_insert_at_cursor(b, c, strlen(c));
     gtk_text_buffer_insert_at_cursor(b, result, strlen(result));
     gtk_text_buffer_insert_at_cursor(b, "\n\n", 2);
@@ -189,6 +187,14 @@ void run_shazam()
 //-------------Le main----------------
 int main(int argc, char *argv[]) 
 {
+    if (argc != 3)
+        errx(EXIT_FAILURE, "Usage:\n"
+                "Arg 1 = ip address (e.g. 127.0.0.1)\n"
+                "Arg 2 = Port number (e.g. 2048)");
+    z.adresse = argv[1];
+    z.port = argv[2];
+    z.name = NULL;
+
     GtkWidget *mainwindow = NULL;
     GError *error = NULL;
     gchar *filename = NULL;
