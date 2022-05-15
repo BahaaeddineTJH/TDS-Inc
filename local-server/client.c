@@ -85,7 +85,7 @@ int main(int argc, char** argv) {
 
     //send song hash to server
     size_t len;
-    long* hash = wrap_get_hash(argv[4],&len);
+    long* hash = wrap_get_hash(argv[3],&len);
     printf("Hash Done.\n");
     rewrite(cnx,hash,len*sizeof(long));
     rewrite(cnx,"\n",1);

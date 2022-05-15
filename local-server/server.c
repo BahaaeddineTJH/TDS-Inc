@@ -44,6 +44,16 @@ void cleanup_client(int fd){
     sem_post(&sq->lock);
 }
 
+void rewrite(int fd,void* buf,size_t len){
+    size_t i = 0;
+    while(i < len){
+        ssize_t r = write(fd,buf+i,len-i);
+        if(r == -1)
+            errx(1,"Could not write into fd");
+        i += (size_t) r;
+    }
+}
+
 void* client_handler(void* arg){
     int fd = (int)((long)arg);
 
@@ -78,23 +88,13 @@ void* search_handler(void* arg __attribute((unused))){
         //Search with arg->hash
         //Send response if matched
         
-        char[] response = "coucou\n";
+        char response[] = "coucou\n";
         rewrite(rq->fd,response,strlen(response));
 
         free(rq);
     }
     pthread_exit(NULL);
 
-}
-
-void rewrite(int fd,void* buf,size_t len){
-    size_t i = 0;
-    while(i < len){
-        ssize_t r = write(fd,buf+i,len-i);
-        if(r == -1)
-            errx(1,"Could not write into fd");
-        i += (size_t) r;
-    }
 }
 
 long* read_data(int client,size_t* len){
@@ -132,17 +132,18 @@ int main(int argc, char** argv)
 {
     if (argc != 3)
         errx(EXIT_FAILURE, "Usage:\n"
-                "Arg 1 = Port number (e.g. 2048)"
+                "Arg 1 = Port number (e.g. 2048)\n"
                 "Arg 2 = Path to bin");
 
-    sq = shared_queue_new();
+    /*sq = shared_queue_new();
     pthread_t thr[THREAD_COUNT];
+
 
     for(size_t i=0; i<THREAD_COUNT; ++i){
         if(pthread_create(&thr[i],NULL,search_handler,sq))
             errx(1,"Could not create thread");
     }
-
+    */
     char* port = argv[1];
 
     struct addrinfo hints;
@@ -177,12 +178,29 @@ int main(int argc, char** argv)
     printf("Listening to port %s\n",port);
     printf("Waiting for connections...\n");
     while (1) {
+        /*
         int client = accept(sck, NULL, NULL);
         if (client == -1)
             errx(1, "Couldn't connect to peer");
         pthread_t t;
         if(pthread_create(&t,NULL,client_handler,(void *)((long) client))){
             close(client);
+        }
+         */
+        while (1) {
+            int client = accept(sck, NULL, NULL);
+            if (client == -1)
+                errx(1, "Couldn't connect to peer");
+            if (!fork()){
+                close(sck);
+                printf("New connection (pid = %i)\n",getpid());
+                process_client(client,argv[2]);
+                close(client);
+                printf("Close connection (pid = %i)\n",getpid());
+                exit(0);
+            }
+            close(client);
+            signal(SIGCHLD,SIG_IGN);
         }
     }
 
